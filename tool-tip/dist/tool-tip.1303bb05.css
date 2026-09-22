@@ -1,0 +1,60 @@
+* {
+  box-sizing: border-box;
+}
+
+.container {
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 2rem;
+  display: flex;
+}
+
+body {
+  margin: 0;
+}
+
+.container.x-left {
+  justify-content: flex-start;
+}
+
+.container.x-right {
+  justify-content: flex-end;
+}
+
+.container.x-center {
+  justify-content: center;
+}
+
+.container.y-top {
+  align-items: flex-start;
+}
+
+.container.y-bottom {
+  align-items: flex-end;
+}
+
+.container.y-center {
+  align-items: center;
+}
+
+.help-text {
+  border-bottom: 3px dotted #00f;
+}
+
+.tooltip-container {
+  pointer-events: none;
+  margin: 0;
+  position: fixed;
+  inset: 0;
+}
+
+.tooltip {
+  border: 1px solid #000;
+  border-radius: .25rem;
+  max-width: 200px;
+  padding: .4rem;
+  font-size: .75rem;
+  position: absolute;
+}
+/*# sourceMappingURL=tool-tip.1303bb05.css.map */
