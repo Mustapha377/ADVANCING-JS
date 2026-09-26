@@ -4,13 +4,14 @@ export default function setup() {
   addGlobalEventListener("mousedown", "[data-draggable]", (e) => {
     const selectedItem = e.target;
     const itemClone = selectedItem.cloneNode(true);
-    const offset = setupDragItems(selectedItem, itemClone, e);
+    const ghost = selectedItem.cloneNode();
+    const offset = setupDragItems(selectedItem, itemClone, ghost, e);
 
-    setupDragEvent(selectedItem, itemClone, offset);
+    setupDragEvent(selectedItem, itemClone, ghost, offset);
   });
 }
 
-function setupDragItems(selectedItem, itemClone, e) {
+function setupDragItems(selectedItem, itemClone, ghost, e) {
   const originalRect = selectedItem.getBoundingClientRect();
   const offset = {
     x: e.clientX - originalRect.left,
@@ -24,12 +25,29 @@ function setupDragItems(selectedItem, itemClone, e) {
   positionClone(itemClone, e, offset);
   document.body.append(itemClone);
 
+  ghost.style.height = `${originalRect.height}px`;
+  ghost.classList.add("ghost");
+  ghost.innerHtml = "";
+  selectedItem.parentElement.insertBefore(ghost, selectedItem);
+
   return offset;
 }
 
-function setupDragEvent(selectedItem, itemClone, offset) {
+function setupDragEvent(selectedItem, itemClone, ghost, offset) {
   const mouseMoveFunction = (e) => {
+    console.log(e.target);
+    const dropZone = getDropZone(e.target);
     positionClone(itemClone, e, offset);
+    if (dropZone == null) return;
+    const closestChild = Array.from(dropZone.children).find((child) => {
+      const rect = child.getBoundingClientRect();
+      return e.clientY < rect.top + rect.height / 2;
+    });
+    if (closestChild != null) {
+      dropZone.insertBefore(ghost, closestChild);
+    } else {
+      dropZone.append(ghost);
+    }
   };
 
   document.addEventListener("mousemove", mouseMoveFunction);
@@ -37,9 +55,7 @@ function setupDragEvent(selectedItem, itemClone, offset) {
     "mouseup",
     () => {
       document.removeEventListener("mousemove", mouseMoveFunction);
-      selectedItem.classList.remove("hide");
-      itemClone.remove();
-      console.log("up");
+      stopDrag(selectedItem, itemClone, ghost);
     },
     { once: true },
   );
@@ -48,4 +64,18 @@ function setupDragEvent(selectedItem, itemClone, offset) {
 function positionClone(itemClone, mousePosition, offset) {
   itemClone.style.top = `${mousePosition.clientY - offset.y}px`;
   itemClone.style.left = `${mousePosition.clientX - offset.x}px`;
+}
+
+function stopDrag(selectedItem, itemClone, ghost) {
+  selectedItem.classList.remove("hide");
+  itemClone.remove();
+  ghost.remove();
+}
+
+function getDropZone(element) {
+  if (element.matches("[data-drop-zone]")) {
+    return element;
+  } else {
+    element.closest("[data-drop-zone]");
+  }
 }
