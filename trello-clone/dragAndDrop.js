@@ -1,13 +1,13 @@
 import addGlobalEventListener from "./utils/addGlobalEventListener";
 
-export default function setup() {
+export default function setup(onDragComplete) {
   addGlobalEventListener("mousedown", "[data-draggable]", (e) => {
     const selectedItem = e.target;
     const itemClone = selectedItem.cloneNode(true);
     const ghost = selectedItem.cloneNode();
     const offset = setupDragItems(selectedItem, itemClone, ghost, e);
 
-    setupDragEvent(selectedItem, itemClone, ghost, offset);
+    setupDragEvent(selectedItem, itemClone, ghost, offset, onDragComplete);
   });
 }
 
@@ -33,7 +33,13 @@ function setupDragItems(selectedItem, itemClone, ghost, e) {
   return offset;
 }
 
-function setupDragEvent(selectedItem, itemClone, ghost, offset) {
+function setupDragEvent(
+  selectedItem,
+  itemClone,
+  ghost,
+  offset,
+  onDragComplete,
+) {
   const mouseMoveFunction = (e) => {
     console.log(e.target);
     const dropZone = getDropZone(e.target);
@@ -55,6 +61,17 @@ function setupDragEvent(selectedItem, itemClone, ghost, offset) {
     "mouseup",
     () => {
       document.removeEventListener("mousemove", mouseMoveFunction);
+      const dropZone = getDropZone(ghost);
+      if (dropZone) {
+        const startZone = getDropZone(selectedItem);
+        dropZone.insertBefore(selectedItem, ghost);
+        onDragComplete({
+          startZone,
+          endZone: dropZone,
+          dragElement: selectedItem,
+          index: Array.from(dropZone.children).indexOf(ghost),
+        });
+      }
       stopDrag(selectedItem, itemClone, ghost);
     },
     { once: true },
@@ -76,6 +93,6 @@ function getDropZone(element) {
   if (element.matches("[data-drop-zone]")) {
     return element;
   } else {
-    element.closest("[data-drop-zone]");
+    return element.closest("[data-drop-zone]");
   }
 }
