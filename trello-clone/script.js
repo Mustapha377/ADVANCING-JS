@@ -1,10 +1,11 @@
+import addGlobalEventListener from "./utils/addGlobalEventListener";
 import setupDragAndDrop from "./dragAndDrop.js";
 import { v4 as uuidv4 } from "uuid";
 
 const STORAGE_PREFIX = "TRELLO_CLONE";
 const LANES_STORAGE_KEY = `${STORAGE_PREFIX}_LANES`;
 const DEFAULT_LANES = {
-  backlogs: [{ id: uuidv4(), texts: "create your first tasks" }],
+  backlogs: [{ id: uuidv4(), text: "create your first tasks" }],
   doing: [],
   done: [],
 };
@@ -13,6 +14,24 @@ const lanes = loadLanes();
 renderTasks();
 
 setupDragAndDrop(onDragComplete);
+
+addGlobalEventListener("submit", "[data-task-form]", (e) => {
+  e.preventDefault();
+
+  const taskInput = e.target.querySelector("[data-task-input]");
+  const taskText = taskInput.value;
+  if (taskText === "") return;
+
+  const task = { id: uuidv4(), text: taskText };
+  const laneElement = e.target.closest(".lane").querySelector("[data-lane-id]");
+  lanes[laneElement.dataset.laneId].push(task);
+
+  const taskElement = createTaskElement(task);
+  laneElement.append(taskElement);
+  taskInput.value = "";
+
+  saveLanes();
+});
 
 function onDragComplete(e) {
   const startLaneId = e.startZone.dataset.laneId;
@@ -50,7 +69,7 @@ function renderTasks() {
 function createTaskElement(task) {
   const element = document.createElement("div");
   element.id = task.id;
-  element.innerHTML = task.texts;
+  element.innerHTML = task.text;
   element.classList.add("task");
   element.dataset.draggable = true;
   return element;
